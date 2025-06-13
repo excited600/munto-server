@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateSocialGatheringDto } from './dto/create-social-gathering.dto';
 import { DateTime } from 'luxon';
 import { SocialGathering } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class SocialGatheringsService {
@@ -66,7 +67,7 @@ export class SocialGatheringsService {
   }
 
   async findLatest(count?: number) {
-    if (count == null || isNaN(count) || count <= 0) {
+    if (count == undefined || count == null || isNaN(count) || count <= 0) {
       count = 10;
     }
 
@@ -77,6 +78,26 @@ export class SocialGatheringsService {
     `;
 
     return socialGatherings.map(gathering => ({
+      ...gathering,
+      start_datetime: DateTime.fromJSDate(gathering.start_datetime)
+        .setZone('Asia/Seoul')
+        .toISO(),
+      end_datetime: DateTime.fromJSDate(gathering.end_datetime)
+        .setZone('Asia/Seoul')
+        .toISO(),
+    }));
+  }
+
+  async findWithCursor(cursor?: number) {
+    const limit = 50;
+    const socialGatherings = await this.prisma.$queryRaw`
+      SELECT * FROM "SocialGathering"
+      ${cursor ? Prisma.sql`WHERE id < ${cursor}` : Prisma.empty}
+      ORDER BY id DESC
+      LIMIT ${limit}
+    `;
+
+    return (socialGatherings as any[]).map(gathering => ({
       ...gathering,
       start_datetime: DateTime.fromJSDate(gathering.start_datetime)
         .setZone('Asia/Seoul')

@@ -19,11 +19,14 @@ export class SocialGatheringsController {
 
   @Get('latest')
   findLatest(@Query('count') count?: string) {
-    var countNumber = count ? parseInt(count, 10) : 10;
-    if (isNaN(countNumber)) {
-      countNumber = 10;
-    }
+    var countNumber = count ? parseInt(count, 10): undefined;
     return this.socialGatheringsService.findLatest(countNumber);
+  }
+
+  @Get('scroll')
+  findWithCursor(@Query('cursor') cursor?: string) {
+    const cursorNumber = cursor ? parseInt(cursor, 10) : undefined;
+    return this.socialGatheringsService.findWithCursor(cursorNumber);
   }
 
   @Get(':id')
