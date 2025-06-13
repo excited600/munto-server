@@ -9,62 +9,38 @@ import { Prisma } from '@prisma/client';
 export class SocialGatheringsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createSocialGatheringDto: CreateSocialGatheringDto) {
+  async create(createSocialGatheringDto: CreateSocialGatheringDto, thumbnail: Buffer) {
     const socialGathering = await this.prisma.socialGathering.create({
       data: {
         host_uuid: createSocialGatheringDto.host_uuid,
         name: createSocialGatheringDto.name,
         location: createSocialGatheringDto.location,
         start_datetime: createSocialGatheringDto.start_datetime,
-        end_datetime: createSocialGatheringDto.end_datetime
+        end_datetime: createSocialGatheringDto.end_datetime,
+        thumbnail: thumbnail,
+        created_by: createSocialGatheringDto.created_by,
+        updated_by: createSocialGatheringDto.updated_by,
+        created_at: new Date(),
+        updated_at: new Date()
       }
     });
 
-    return {
-      ...socialGathering,
-      start_datetime: DateTime.fromJSDate(socialGathering.start_datetime)
-        .setZone('Asia/Seoul')
-        .toISO(),
-      end_datetime: DateTime.fromJSDate(socialGathering.end_datetime)
-        .setZone('Asia/Seoul')
-        .toISO(),
-    };
-
+    return this.formatSocialGathering(socialGathering);
   }
 
   async findAll() {
-    return this.prisma.$queryRaw`
-      SELECT * FROM "SocialGathering"
-    `;
+    const socialGatherings = await this.prisma.socialGathering.findMany();
+    return socialGatherings.map(gathering => this.formatSocialGathering(gathering));
   }
 
   async findOne(id: number) {
-    return this.prisma.$queryRaw`
-      SELECT * FROM "SocialGathering"
-      WHERE id = ${id}
-    `;
+    const socialGathering = await this.prisma.socialGathering.findUnique({
+      where: { id }
+    });
+    return socialGathering ? this.formatSocialGathering(socialGathering) : null;
   }
 
-  async update(id: number, updateSocialGatheringDto: Partial<CreateSocialGatheringDto>) {
-    const fields = Object.keys(updateSocialGatheringDto)
-      .map(key => `${key} = $${key}`)
-      .join(', ');
-    
-    return this.prisma.$queryRaw`
-      UPDATE "SocialGathering"
-      SET ${fields}
-      WHERE id = ${id}
-      RETURNING *
-    `;
-  }
 
-  async remove(id: number) {
-    return this.prisma.$queryRaw`
-      DELETE FROM "SocialGathering"
-      WHERE id = ${id}
-      RETURNING *
-    `;
-  }
 
   async findLatest(count?: number) {
     if (count == undefined || count == null || isNaN(count) || count <= 0) {
@@ -77,27 +53,23 @@ export class SocialGatheringsService {
       LIMIT ${count}
     `;
 
-    return socialGatherings.map(gathering => ({
-      ...gathering,
-      start_datetime: DateTime.fromJSDate(gathering.start_datetime)
-        .setZone('Asia/Seoul')
-        .toISO(),
-      end_datetime: DateTime.fromJSDate(gathering.end_datetime)
-        .setZone('Asia/Seoul')
-        .toISO(),
-    }));
+    return socialGatherings.map(gathering => this.formatSocialGathering(gathering));
   }
 
   async findWithCursor(cursor?: number) {
     const limit = 50;
-    const socialGatherings = await this.prisma.$queryRaw`
+    const socialGatherings = await this.prisma.$queryRaw<SocialGathering[]>`
       SELECT * FROM "SocialGathering"
       ${cursor ? Prisma.sql`WHERE id < ${cursor}` : Prisma.empty}
       ORDER BY id DESC
       LIMIT ${limit}
     `;
 
-    return (socialGatherings as any[]).map(gathering => ({
+    return socialGatherings.map(gathering => this.formatSocialGathering(gathering));
+  }
+  
+  private formatSocialGathering(gathering: SocialGathering) {
+    return {
       ...gathering,
       start_datetime: DateTime.fromJSDate(gathering.start_datetime)
         .setZone('Asia/Seoul')
@@ -105,6 +77,12 @@ export class SocialGatheringsService {
       end_datetime: DateTime.fromJSDate(gathering.end_datetime)
         .setZone('Asia/Seoul')
         .toISO(),
-    }));
+      created_at: DateTime.fromJSDate(gathering.created_at)
+        .setZone('Asia/Seoul')
+        .toISO(),
+      updated_at: DateTime.fromJSDate(gathering.updated_at)
+        .setZone('Asia/Seoul')
+        .toISO(),
+    };
   }
 } 

@@ -1,5 +1,4 @@
-import { IsString, IsUUID, IsDateString } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsString, IsUUID, IsDateString, IsByteLength } from 'class-validator';
 
 export class CreateSocialGatheringDto {
   @IsUUID()
@@ -16,4 +15,13 @@ export class CreateSocialGatheringDto {
 
   @IsDateString()
   end_datetime: Date;
+
+  @IsByteLength(1, 10485760) // 10MB max, 최소 1바이트
+  thumbnail: Buffer;
+
+  @IsUUID()
+  created_by: string;
+
+  @IsUUID()
+  updated_by: string;
 } 

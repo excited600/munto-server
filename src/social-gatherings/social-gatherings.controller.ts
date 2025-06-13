@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, ParseIntPipe, BadRequestException, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { SocialGatheringsService } from './social-gatherings.service';
 import { CreateSocialGatheringDto } from './dto/create-social-gathering.dto';
 import { HostGuard } from './guards/host.guard';
@@ -8,8 +9,16 @@ export class SocialGatheringsController {
   constructor(private readonly socialGatheringsService: SocialGatheringsService) {}
 
   @Post()
-  create(@Body() createSocialGatheringDto: CreateSocialGatheringDto) {
-    return this.socialGatheringsService.create(createSocialGatheringDto);
+  @UseInterceptors(FileInterceptor('thumbnail'))
+  async create(
+    @Body() createSocialGatheringDto: CreateSocialGatheringDto,
+    @UploadedFile() thumbnail: Express.Multer.File,
+  ) {
+    // created_by와 updated_by는 현재 로그인한 사용자의 UUID로 설정
+    createSocialGatheringDto.created_by = createSocialGatheringDto.host_uuid;
+    createSocialGatheringDto.updated_by = createSocialGatheringDto.host_uuid;
+    
+    return this.socialGatheringsService.create(createSocialGatheringDto, thumbnail.buffer);
   }
 
   @Get()
@@ -19,7 +28,7 @@ export class SocialGatheringsController {
 
   @Get('latest')
   findLatest(@Query('count') count?: string) {
-    var countNumber = count ? parseInt(count, 10): undefined;
+    const countNumber = count ? parseInt(count, 10) : undefined;
     return this.socialGatheringsService.findLatest(countNumber);
   }
 
@@ -30,21 +39,8 @@ export class SocialGatheringsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.socialGatheringsService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.socialGatheringsService.findOne(id);
   }
 
-  @Patch(':id')
-  @UseGuards(HostGuard)
-  update(
-    @Param('id') id: string,
-    @Body() updateSocialGatheringDto: Partial<CreateSocialGatheringDto>,
-  ) {
-    return this.socialGatheringsService.update(+id, updateSocialGatheringDto);
-  }
-
-  @Delete(':id')
-  @UseGuards(HostGuard)
-  remove(@Param('id') id: string) {
-  }
 }

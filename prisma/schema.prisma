@@ -19,8 +19,13 @@ model SocialGathering {
   host_uuid      String   @db.Uuid
   name           String
   location       String
+  thumbnail      Bytes   @db.ByteA
   start_datetime DateTime
   end_datetime   DateTime
+  created_at     DateTime @default(now())
+  created_by     String   @db.Uuid
+  updated_at     DateTime @updatedAt
+  updated_by     String   @db.Uuid
 
   @@index([start_datetime])
 }
