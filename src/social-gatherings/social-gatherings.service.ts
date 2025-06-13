@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSocialGatheringDto } from './dto/create-social-gathering.dto';
 import { DateTime } from 'luxon';
+import { SocialGathering } from '@prisma/client';
 
 @Injectable()
 export class SocialGatheringsService {
@@ -62,5 +63,27 @@ export class SocialGatheringsService {
       WHERE id = ${id}
       RETURNING *
     `;
+  }
+
+  async findLatest(count?: number) {
+    if (count == null || isNaN(count) || count <= 0) {
+      count = 10;
+    }
+
+    const socialGatherings = await this.prisma.$queryRaw<SocialGathering[]>`
+      SELECT * FROM "SocialGathering"
+      ORDER BY "start_datetime" DESC
+      LIMIT ${count}
+    `;
+
+    return socialGatherings.map(gathering => ({
+      ...gathering,
+      start_datetime: DateTime.fromJSDate(gathering.start_datetime)
+        .setZone('Asia/Seoul')
+        .toISO(),
+      end_datetime: DateTime.fromJSDate(gathering.end_datetime)
+        .setZone('Asia/Seoul')
+        .toISO(),
+    }));
   }
 } 

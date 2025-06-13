@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { SocialGatheringsService } from './social-gatherings.service';
 import { CreateSocialGatheringDto } from './dto/create-social-gathering.dto';
 import { HostGuard } from './guards/host.guard';
@@ -15,6 +15,15 @@ export class SocialGatheringsController {
   @Get()
   findAll() {
     return this.socialGatheringsService.findAll();
+  }
+
+  @Get('latest')
+  findLatest(@Query('count') count?: string) {
+    var countNumber = count ? parseInt(count, 10) : 10;
+    if (isNaN(countNumber)) {
+      countNumber = 10;
+    }
+    return this.socialGatheringsService.findLatest(countNumber);
   }
 
   @Get(':id')
