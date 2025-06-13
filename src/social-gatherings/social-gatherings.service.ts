@@ -4,12 +4,15 @@ import { CreateSocialGatheringDto } from './dto/create-social-gathering.dto';
 import { DateTime } from 'luxon';
 import { SocialGathering } from '@prisma/client';
 import { Prisma } from '@prisma/client';
+import { uploadImageToS3 } from '../common/s3.service';
 
 @Injectable()
 export class SocialGatheringsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createSocialGatheringDto: CreateSocialGatheringDto, thumbnail: Buffer) {
+  async create(createSocialGatheringDto: CreateSocialGatheringDto, thumbnail: Express.Multer.File) {
+    // S3 업로드
+    const thumnail_url = await uploadImageToS3(thumbnail.buffer, thumbnail.mimetype);
     const socialGathering = await this.prisma.socialGathering.create({
       data: {
         host_uuid: createSocialGatheringDto.host_uuid,
@@ -17,14 +20,13 @@ export class SocialGatheringsService {
         location: createSocialGatheringDto.location,
         start_datetime: createSocialGatheringDto.start_datetime,
         end_datetime: createSocialGatheringDto.end_datetime,
-        thumbnail: thumbnail,
+        thumbnail_url: thumnail_url,
         created_by: createSocialGatheringDto.created_by,
         updated_by: createSocialGatheringDto.updated_by,
         created_at: new Date(),
         updated_at: new Date()
       }
     });
-
     return this.formatSocialGathering(socialGathering);
   }
 

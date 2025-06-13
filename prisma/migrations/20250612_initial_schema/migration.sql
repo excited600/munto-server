@@ -16,7 +16,7 @@ CREATE TABLE "SocialGathering" (
   id SERIAL PRIMARY KEY,
   host_uuid UUID NOT NULL,
   name TEXT NOT NULL,
-  thumbnail BYTEA,
+  thumbnail_url TEXT NOT NULL,
   location TEXT NOT NULL,
   start_datetime TIMESTAMP(3) NOT NULL,
   end_datetime TIMESTAMP(3) NOT NULL,

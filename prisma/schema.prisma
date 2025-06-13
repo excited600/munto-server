@@ -19,7 +19,7 @@ model SocialGathering {
   host_uuid      String   @db.Uuid
   name           String
   location       String
-  thumbnail      Bytes   @db.ByteA
+  thumbnail_url  String
   start_datetime DateTime
   end_datetime   DateTime
   created_at     DateTime @default(now())
