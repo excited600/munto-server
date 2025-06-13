@@ -3,9 +3,6 @@
 APP_NAME=munto
 PORT=3000
 
-deploy:
-	docker-compose up -d --build
-
 up:
 	docker-compose up -d
 
