@@ -20,6 +20,7 @@ model SocialGathering {
   name           String
   location       String
   thumbnail_url  String
+  price          Int 
   start_datetime DateTime
   end_datetime   DateTime
   created_at     DateTime @default(now())
@@ -34,7 +35,8 @@ model User {
   uuid              String    @id @default(uuid())
   name              String
   temperature       Float
-  profile_picture   Bytes?
+  profile_picture_url String?
+  introduction      String?
   is_host           Boolean   @default(false)
   is_authenticated  Boolean   @default(false)
   created_at        DateTime  @default(now())

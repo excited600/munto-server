@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 
@@ -6,28 +7,12 @@ import { CreateUserDto } from './dto/create-user.dto';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
-  }
-
-  @Get(':uuid')
-  findOne(@Param('uuid') uuid: string) {
-    return this.usersService.findOne(uuid);
-  }
-
-  @Patch(':uuid')
-  update(@Param('uuid') uuid: string, @Body() updateUserDto: Partial<CreateUserDto>) {
-    return this.usersService.update(uuid, updateUserDto);
-  }
-
-  @Delete(':uuid')
-  remove(@Param('uuid') uuid: string) {
-    return this.usersService.remove(uuid);
+  @Post('/signup')
+  @UseInterceptors(FileInterceptor('profile_picture'))
+  async create(
+    @Body() createUserDto: CreateUserDto,
+    @UploadedFile() profilePicture?: Express.Multer.File,
+  ) {
+    return this.usersService.create(createUserDto, profilePicture);
   }
 } 

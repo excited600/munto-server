@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Param, Query, ParseIntPipe, BadRequestExce
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SocialGatheringsService } from './social-gatherings.service';
 import { CreateSocialGatheringDto } from './dto/create-social-gathering.dto';
+import { ParticipateSocialGatheringDto } from './dto/participate-social-gathering.dto';
 
 @Controller('social-gatherings')
 export class SocialGatheringsController {
@@ -17,11 +18,6 @@ export class SocialGatheringsController {
     createSocialGatheringDto.created_by = createSocialGatheringDto.host_uuid;
     createSocialGatheringDto.updated_by = createSocialGatheringDto.host_uuid;
     return this.socialGatheringsService.create(createSocialGatheringDto, thumbnail);
-  }
-
-  @Get()
-  findAll() {
-    return this.socialGatheringsService.findAll();
   }
 
   @Get('latest')
@@ -41,4 +37,11 @@ export class SocialGatheringsController {
     return this.socialGatheringsService.findOne(id);
   }
 
+  @Post(':id/participate')
+  participate(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() participateDto: ParticipateSocialGatheringDto
+  ) {
+    return this.socialGatheringsService.participate(id, participateDto);
+  }
 }

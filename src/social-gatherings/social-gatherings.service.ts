@@ -1,14 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSocialGatheringDto } from './dto/create-social-gathering.dto';
+import { ParticipateSocialGatheringDto } from './dto/participate-social-gathering.dto';
 import { DateTime } from 'luxon';
 import { SocialGathering } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 import { uploadImageToS3 } from '../common/s3.service';
+import { IamportService } from './iamport.service';
 
 @Injectable()
 export class SocialGatheringsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private iamportService: IamportService
+  ) {}
 
   async create(createSocialGatheringDto: CreateSocialGatheringDto, thumbnail: Express.Multer.File) {
     // S3 업로드
@@ -18,6 +23,7 @@ export class SocialGatheringsService {
         host_uuid: createSocialGatheringDto.host_uuid,
         name: createSocialGatheringDto.name,
         location: createSocialGatheringDto.location,
+        price: createSocialGatheringDto.price,
         start_datetime: createSocialGatheringDto.start_datetime,
         end_datetime: createSocialGatheringDto.end_datetime,
         thumbnail_url: thumnail_url,
@@ -41,8 +47,6 @@ export class SocialGatheringsService {
     });
     return socialGathering ? this.formatSocialGathering(socialGathering) : null;
   }
-
-
 
   async findLatest(count?: number) {
     if (count == undefined || count == null || isNaN(count) || count <= 0) {
@@ -86,5 +90,34 @@ export class SocialGatheringsService {
         .setZone('Asia/Seoul')
         .toISO(),
     };
+  }
+
+  async participate(id: number, participateDto: ParticipateSocialGatheringDto) {
+    const socialGathering = await this.prisma.socialGathering.findUnique({
+      where: { id }
+    });
+
+    if (!socialGathering) {
+      throw new NotFoundException('Social gathering not found');
+    }
+
+    const paymentResult = await this.iamportService.getPaymentResult(participateDto.imp_uid);
+    if (paymentResult.status !== 'paid') {
+      throw new BadRequestException('Payment is not completed');
+    }
+
+    if (paymentResult.amount !== socialGathering.price) {
+      throw new BadRequestException('Payment amount does not match');
+    }
+
+    // 5. 참가자 추가
+    await this.prisma.participant.create({
+      data: {
+        social_gathering_id: id,
+        user_uuid: participateDto.user_uuid
+      }
+    });
+
+    return { message: 'Successfully participated in the social gathering' };
   }
 } 

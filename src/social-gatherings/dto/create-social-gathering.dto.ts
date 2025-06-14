@@ -1,4 +1,4 @@
-import { IsString, IsUUID, IsDateString, IsByteLength } from 'class-validator';
+import { IsString, IsUUID, IsDateString, IsInt, Min } from 'class-validator';
 
 export class CreateSocialGatheringDto {
   @IsUUID()
@@ -9,6 +9,10 @@ export class CreateSocialGatheringDto {
 
   @IsString()
   location: string;
+
+  @IsInt()
+  @Min(0)
+  price: number;
 
   @IsDateString()
   start_datetime: Date;

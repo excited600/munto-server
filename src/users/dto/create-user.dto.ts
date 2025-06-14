@@ -9,11 +9,10 @@ export class CreateUserDto {
 
   @IsOptional()
   @IsString()
-  profile_picture?: Buffer;
-
-  @IsOptional()
+  introduction?: string;
+  
   @IsBoolean()
-  is_host?: boolean;
+  is_host: boolean;
 
   @IsOptional()
   @IsBoolean()
