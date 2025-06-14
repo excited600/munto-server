@@ -1,9 +1,12 @@
-import { Controller, Get, Post, Body, Param, Query, ParseIntPipe, BadRequestException, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, ParseIntPipe, UseInterceptors, UploadedFile, UseGuards, Request } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SocialGatheringsService } from './social-gatherings.service';
 import { CreateSocialGatheringDto } from './dto/create-social-gathering.dto';
 import { ParticipateSocialGatheringDto } from './dto/participate-social-gathering.dto';
 import { ParticipantInfo } from './interfaces/participant-info.interface';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Request as ExpressRequest } from 'express';
+import { User } from 'src/decorators/user-decorator';
 
 @Controller('social-gatherings')
 export class SocialGatheringsController {
@@ -22,7 +25,9 @@ export class SocialGatheringsController {
   }
 
   @Get('latest')
-  findLatest(@Query('count') count?: string) {
+  @UseGuards(JwtAuthGuard)
+  findLatest(@User('email') email: string, @Query('count') count?: string) {
+    console.log("email: ", email);
     const countNumber = count ? parseInt(count, 10) : undefined;
     return this.socialGatheringsService.findLatest(countNumber);
   }

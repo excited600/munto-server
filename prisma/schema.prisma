@@ -33,6 +33,7 @@ model SocialGathering {
 
 model User {
   uuid                String    @id @default(uuid())
+  email               String    @unique
   name                String
   temperature         Float     @default(36.5)
   profile_picture_url String?
