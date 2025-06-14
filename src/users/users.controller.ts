@@ -2,7 +2,6 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, Upl
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { DateTime } from 'luxon';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AuthService } from '../auth/auth.service';
 
@@ -20,12 +19,6 @@ export class UsersController {
     @UploadedFile() profilePicture?: Express.Multer.File,
   ) {
     return this.usersService.create(createUserDto, profilePicture);
-  }
-
-  @Post('login')
-  async login(@Body() loginDto: { uuid: string }) {
-    const user = await this.usersService.findOne(loginDto.uuid);
-    return this.authService.generateToken(user);
   }
 
   @UseGuards(JwtAuthGuard)

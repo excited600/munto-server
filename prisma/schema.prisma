@@ -44,8 +44,4 @@ model User {
   updated_at         DateTime  @updatedAt
 
   @@index([name, created_at])
-
-  // Relations
-  social_gatherings  SocialGathering[] @relation("Host")
-  participants       Participant[]
 }
