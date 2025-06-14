@@ -3,6 +3,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { SocialGatheringsService } from './social-gatherings.service';
 import { CreateSocialGatheringDto } from './dto/create-social-gathering.dto';
 import { ParticipateSocialGatheringDto } from './dto/participate-social-gathering.dto';
+import { ParticipantInfo } from './interfaces/participant-info.interface';
 
 @Controller('social-gatherings')
 export class SocialGatheringsController {
@@ -32,6 +33,11 @@ export class SocialGatheringsController {
     return this.socialGatheringsService.findWithCursor(cursorNumber);
   }
 
+  @Get(':id/participants')
+  getParticipants(@Param('id', ParseIntPipe) id: number): Promise<ParticipantInfo[]> {
+    return this.socialGatheringsService.getParticipants(id);
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.socialGatheringsService.findOne(id);
@@ -40,8 +46,8 @@ export class SocialGatheringsController {
   @Post(':id/participate')
   participate(
     @Param('id', ParseIntPipe) id: number,
-    @Body() participateDto: ParticipateSocialGatheringDto
+    @Body() participateSocialGatheringDto: ParticipateSocialGatheringDto
   ) {
-    return this.socialGatheringsService.participate(id, participateDto);
+    return this.socialGatheringsService.participate(id, participateSocialGatheringDto);
   }
 }

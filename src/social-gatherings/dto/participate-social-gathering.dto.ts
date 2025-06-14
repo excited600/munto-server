@@ -1,7 +1,7 @@
 import { IsString, IsUUID } from 'class-validator';
 
 export class ParticipateSocialGatheringDto {
-  @IsUUID()
+  @IsString()
   user_uuid: string;
 
   @IsString()

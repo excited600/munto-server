@@ -32,15 +32,20 @@ model SocialGathering {
 }
 
 model User {
-  uuid              String    @id @default(uuid())
-  name              String
-  temperature       Float
+  uuid                String    @id @default(uuid())
+  name                String
+  temperature         Float     @default(36.5)
   profile_picture_url String?
-  introduction      String?
-  is_host           Boolean   @default(false)
-  is_authenticated  Boolean   @default(false)
-  created_at        DateTime  @default(now())
-  updated_at        DateTime  @updatedAt
+  introduction        String?
+  is_host            Boolean   @default(false)
+  is_authenticated   Boolean   @default(false)
+  password           String
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
 
   @@index([name, created_at])
+
+  // Relations
+  social_gatherings  SocialGathering[] @relation("Host")
+  participants       Participant[]
 }

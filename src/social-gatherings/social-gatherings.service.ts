@@ -7,6 +7,7 @@ import { SocialGathering } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 import { uploadImageToS3 } from '../common/s3.service';
 import { IamportService } from './iamport.service';
+import { ParticipantInfo } from './interfaces/participant-info.interface';
 
 @Injectable()
 export class SocialGatheringsService {
@@ -17,13 +18,13 @@ export class SocialGatheringsService {
 
   async create(createSocialGatheringDto: CreateSocialGatheringDto, thumbnail: Express.Multer.File) {
     // S3 업로드
-    const thumnail_url = await uploadImageToS3(thumbnail.buffer, thumbnail.mimetype);
+    const thumnail_url = await uploadImageToS3(thumbnail.buffer, thumbnail.mimetype, 'social-gatherings');
     const socialGathering = await this.prisma.socialGathering.create({
       data: {
         host_uuid: createSocialGatheringDto.host_uuid,
         name: createSocialGatheringDto.name,
         location: createSocialGatheringDto.location,
-        price: createSocialGatheringDto.price,
+        price: parseInt(createSocialGatheringDto.price, 10),
         start_datetime: createSocialGatheringDto.start_datetime,
         end_datetime: createSocialGatheringDto.end_datetime,
         thumbnail_url: thumnail_url,
@@ -110,7 +111,6 @@ export class SocialGatheringsService {
       throw new BadRequestException('Payment amount does not match');
     }
 
-    // 5. 참가자 추가
     await this.prisma.participant.create({
       data: {
         social_gathering_id: id,
@@ -119,5 +119,21 @@ export class SocialGatheringsService {
     });
 
     return { message: 'Successfully participated in the social gathering' };
+  }
+
+  async getParticipants(socialGatheringId: number) {
+    const participants = await this.prisma.$queryRaw<ParticipantInfo[]>`
+      SELECT 
+        u.uuid::text as user_uuid,
+        u.name,
+        u.profile_picture_url,
+        u.temperature,
+        u.introduction
+      FROM "Participant" p
+      INNER JOIN "User" u ON p.user_uuid::text = u.uuid::text
+      WHERE p.social_gathering_id = ${socialGatheringId}
+    `;
+
+    return participants;
   }
 } 

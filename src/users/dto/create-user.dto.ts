@@ -4,17 +4,11 @@ export class CreateUserDto {
   @IsString()
   name: string;
 
-  @IsNumber()
-  temperature: number;
-
-  @IsOptional()
   @IsString()
+  @IsOptional()
   introduction?: string;
   
-  @IsBoolean()
-  is_host: boolean;
+  @IsString()
+  is_host: string;
 
-  @IsOptional()
-  @IsBoolean()
-  is_authenticated?: boolean;
 } 
