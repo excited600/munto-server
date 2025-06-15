@@ -16,24 +16,41 @@ export class SocialGatheringsService {
     private iamportService: IamportService
   ) {}
 
-  async create(createSocialGatheringDto: CreateSocialGatheringDto, thumbnail: Express.Multer.File) {
+  async create(sessionEmail: string, createSocialGatheringDto: CreateSocialGatheringDto, thumbnail: Express.Multer.File) {
+    const sessionUser = await this.prisma.user.findUnique({
+      where: { email: sessionEmail },
+    });
+
+    if (!sessionUser) {
+      throw new BadRequestException('로그인된 사용자를 찾을 수 없습니다.');
+    }
+
     // S3 업로드
     const thumnail_url = await uploadImageToS3(thumbnail.buffer, thumbnail.mimetype, 'social-gatherings');
     const socialGathering = await this.prisma.socialGathering.create({
       data: {
-        host_uuid: createSocialGatheringDto.host_uuid,
+        host_uuid: sessionUser.uuid,
         name: createSocialGatheringDto.name,
         location: createSocialGatheringDto.location,
         price: parseInt(createSocialGatheringDto.price, 10),
         start_datetime: createSocialGatheringDto.start_datetime,
         end_datetime: createSocialGatheringDto.end_datetime,
         thumbnail_url: thumnail_url,
-        created_by: createSocialGatheringDto.created_by,
-        updated_by: createSocialGatheringDto.updated_by,
+        created_by: sessionUser.uuid,
+        updated_by: sessionUser.uuid,
         created_at: new Date(),
         updated_at: new Date()
       }
     });
+
+    // todo: 코드 중복.. 개선 필요
+    await this.prisma.participant.create({
+      data: {
+        social_gathering_id: socialGathering.id,
+        user_uuid: sessionUser.uuid
+      }
+    });
+
     return this.formatSocialGathering(socialGathering);
   }
 
@@ -93,7 +110,15 @@ export class SocialGatheringsService {
     };
   }
 
-  async participate(id: number, participateDto: ParticipateSocialGatheringDto) {
+  async participate(id: number, sessionEmail: string, participateDto: ParticipateSocialGatheringDto) {
+    const sessionUser = await this.prisma.user.findUnique({
+      where: { email: sessionEmail },
+    });
+
+    if (!sessionUser) {
+      throw new BadRequestException('로그인된 사용자를 찾을 수 없습니다.');
+    }
+
     const socialGathering = await this.prisma.socialGathering.findUnique({
       where: { id }
     });
@@ -114,7 +139,7 @@ export class SocialGatheringsService {
     await this.prisma.participant.create({
       data: {
         social_gathering_id: id,
-        user_uuid: participateDto.user_uuid
+        user_uuid: sessionUser.uuid
       }
     });
 

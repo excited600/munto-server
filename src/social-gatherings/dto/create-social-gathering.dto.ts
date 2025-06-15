@@ -1,9 +1,6 @@
 import { IsString, IsUUID, IsDateString } from 'class-validator';
 
 export class CreateSocialGatheringDto {
-  @IsUUID()
-  host_uuid: string;
-
   @IsString()
   name: string;
 
@@ -18,10 +15,4 @@ export class CreateSocialGatheringDto {
 
   @IsDateString()
   end_datetime: Date;
-
-  @IsUUID()
-  created_by: string;
-
-  @IsUUID()
-  updated_by: string;
 } 

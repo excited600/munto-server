@@ -12,22 +12,19 @@ import { User } from 'src/decorators/user-decorator';
 export class SocialGatheringsController {
   constructor(private readonly socialGatheringsService: SocialGatheringsService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   @UseInterceptors(FileInterceptor('thumbnail'))
   async create(
+    @User('email') sessionEmail: string,
     @Body() createSocialGatheringDto: CreateSocialGatheringDto,
     @UploadedFile() thumbnail: Express.Multer.File,
   ) {
-    // created_by와 updated_by는 현재 로그인한 사용자의 UUID로 설정
-    createSocialGatheringDto.created_by = createSocialGatheringDto.host_uuid;
-    createSocialGatheringDto.updated_by = createSocialGatheringDto.host_uuid;
-    return this.socialGatheringsService.create(createSocialGatheringDto, thumbnail);
+    return this.socialGatheringsService.create(sessionEmail, createSocialGatheringDto, thumbnail);
   }
 
   @Get('latest')
-  @UseGuards(JwtAuthGuard)
-  findLatest(@User('email') email: string, @Query('count') count?: string) {
-    console.log("email: ", email);
+  findLatest(@Query('count') count?: string) {
     const countNumber = count ? parseInt(count, 10) : undefined;
     return this.socialGatheringsService.findLatest(countNumber);
   }
@@ -48,11 +45,13 @@ export class SocialGatheringsController {
     return this.socialGatheringsService.findOne(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post(':id/participate')
   participate(
+    @User('email') sessionEmail: string,
     @Param('id', ParseIntPipe) id: number,
     @Body() participateSocialGatheringDto: ParticipateSocialGatheringDto
   ) {
-    return this.socialGatheringsService.participate(id, participateSocialGatheringDto);
+    return this.socialGatheringsService.participate(id, sessionEmail, participateSocialGatheringDto);
   }
 }

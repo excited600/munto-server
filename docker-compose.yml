@@ -32,6 +32,8 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       IAMPORT_REST_API_KEY: ${IAMPORT_REST_API_KEY}
       IAMPORT_REST_API_SECRET: ${IAMPORT_REST_API_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
     depends_on:
       postgres:
         condition: service_healthy
